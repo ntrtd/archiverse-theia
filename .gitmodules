@@ -1,0 +1,36 @@
+[submodule "submodules/archiverse-archie"]
+	path = submodules/archiverse-archie
+	url = https://github.com/ntrtd/archiverse-archie
+[submodule "submodules/langium"]
+	path = submodules/langium
+	url = https://github.com/eclipse-langium/langium
+[submodule "submodules/langium-website"]
+	path = submodules/langium-website
+	url = https://github.com/eclipse-langium/langium-website
+[submodule "submodules/theia"]
+	path = submodules/theia
+	url = https://github.com/eclipse-theia/theia
+[submodule "submodules/theia-ide"]
+	path = submodules/theia-ide
+	url = https://github.com/eclipse-theia/theia-ide
+[submodule "submodules/theia-cloud-helm"]
+	path = submodules/theia-cloud-helm
+	url = https://github.com/eclipse-theia/theia-cloud-helm
+[submodule "submodules/tinkerpop"]
+	path = submodules/tinkerpop
+	url = https://github.com/apache/tinkerpop
+[submodule "submodules/modelcontextprotocol"]
+	path = submodules/modelcontextprotocol
+	url = https://github.com/modelcontextprotocol/servers
+[submodule "submodules/dynamics365patternspractices"]
+	path = submodules/dynamics365patternspractices
+	url = https://github.com/microsoft/dynamics365patternspractices
+[submodule "submodules/archiverse-theia-glsp"]
+	path = submodules/archiverse-theia-glsp
+	url = https://github.com/ntrtd/archiverse-theia-glsp.git
+[submodule "submodules/crossmodel"]
+	path = submodules/crossmodel
+	url = https://github.com/CrossBreezeNL/crossmodel
+[submodule "submodules/archiverse-theia-backendcomm"]
+	path = submodules/archiverse-theia-backendcomm
+	url = https://github.com/ntrtd/archiverse-theia-backendcomm.git
