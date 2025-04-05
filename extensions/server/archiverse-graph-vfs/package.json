@@ -1,0 +1,26 @@
+{
+  "name": "archiverse-graph-vfs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Graph database Virtual File System provider (backend).",
+  "theia": {
+    "backend": "lib/node/archiverse-graph-vfs-backend-module"
+  },
+  "keywords": [
+    "theia-extension"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf lib",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@theia/core": "1.60.0",
+    "@theia/filesystem": "1.60.0"
+  },
+  "devDependencies": {
+    "rimraf": "latest",
+    "typescript": "latest"
+  }
+}

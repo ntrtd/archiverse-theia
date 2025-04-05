@@ -1,0 +1,27 @@
+{
+  "name": "archiverse-editor-widgets",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Custom Monaco editor widgets and enhancements for Archiverse (frontend).",
+  "theia": {
+    "frontend": "lib/browser/archiverse-editor-widgets-frontend-module"
+  },
+  "keywords": [
+    "theia-extension"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf lib",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@theia/core": "1.60.0",
+    "@theia/editor": "1.60.0",
+    "@theia/monaco": "1.60.0"
+  },
+  "devDependencies": {
+    "rimraf": "latest",
+    "typescript": "latest"
+  }
+}

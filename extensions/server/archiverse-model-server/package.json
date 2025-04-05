@@ -1,0 +1,25 @@
+{
+  "name": "archiverse-model-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Archiverse model server providing higher-level model access and logic (backend).",
+  "theia": {
+    "backend": "lib/node/archiverse-model-server-backend-module"
+  },
+  "keywords": [
+    "theia-extension"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf lib",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@theia/core": "1.60.0"
+  },
+  "devDependencies": {
+    "rimraf": "latest",
+    "typescript": "latest"
+  }
+}

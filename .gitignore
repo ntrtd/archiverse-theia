@@ -1,12 +1,6 @@
-.DS_Store
-**/node_modules
-**/.browser_modules
-**/dist
-**/lib
-**/src-gen
-**/gen-webpack.config.js
-**/gen-webpack.node.config.js
-**/plugins
-**/tsconfig.tsbuildinfo
+node_modules
+.browser_modules
+lib
 *.log
-license-check-summary.txt*
+*-app/*
+!*-app/package.json

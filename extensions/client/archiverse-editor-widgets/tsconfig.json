@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "composite": true,
+    "tsBuildInfoFile": "../../.build-cache/client-editor-widgets.tsbuildinfo"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    // Add references to other local packages if needed
+  ]
+}

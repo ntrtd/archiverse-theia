@@ -1,0 +1,36 @@
+// Sample Archiverse File for Testing
+
+@domain ExampleDomain {
+    description: "A sample domain for testing purposes."
+}
+
+@element User {
+    description: "Represents a user in the system."
+    properties {
+        userId: string @key;
+        username: string;
+        email: string;
+    }
+}
+
+@element Order {
+    description: "Represents a customer order."
+    properties {
+        orderId: string @key;
+        orderDate: date;
+        totalAmount: decimal;
+    }
+}
+
+@relation PlacesOrder {
+    from: User;
+    to: Order;
+    cardinality: OneToMany;
+    description: "A user places one or more orders.";
+}
+
+@view UserOrders {
+    title: "User and Their Orders"
+    elements { User, Order }
+    relations { PlacesOrder }
+}

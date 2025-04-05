@@ -1,0 +1,27 @@
+{
+  "name": "archiverse-glsp-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Archiverse GLSP diagram server (backend).",
+  "theia": {
+    "backend": "lib/node/archiverse-glsp-server-backend-module"
+  },
+  "keywords": [
+    "theia-extension"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf lib",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@theia/core": "1.60.0",
+    "@eclipse-glsp/theia-integration": "latest",
+    "@eclipse-glsp/server": "latest"
+  },
+  "devDependencies": {
+    "rimraf": "latest",
+    "typescript": "latest"
+  }
+}
