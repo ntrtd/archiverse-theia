@@ -1,0 +1,1 @@
+{"version":3,"file":"archiverse-validator.d.ts","sourceRoot":"","sources":["../../../src/language/archiverse-validator.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,wBAAwB,CAAC;AAEjE;;GAEG;AACH,wBAAgB,wBAAwB,CAAC,QAAQ,EAAE,kBAAkB,GAAG,IAAI,CAW3E;AAED;;GAEG;AACH,qBAAa,mBAAmB;IAE5B,SAAS,CAAC,QAAQ,CAAC,QAAQ,EAAE,kBAAkB,CAAC;gBAEpC,QAAQ,EAAE,kBAAkB;CAiB3C"}

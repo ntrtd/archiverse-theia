@@ -14,15 +14,15 @@ The architecture aligns with the CrossModel pattern, separating the main Theia e
         *   **Backend Contributions (`packages/theia-backend-extensions/`):** Contains extensions like `glsp-contribution` which receive requests from the frontend via Theia RPC and forward them to the actual servers in the `Server Process` via custom RPC (e.g., Sockets). Includes Model Hub contributions if used. See [Backend Contributions](./backend-extensions.md) for details.
     *   **Theia Frontend (`packages/theia-frontend-*`):** UI components running in the browser/renderer process (Explorer, GLSP Client, Forms Client, Menus, etc.). Communicate with the Theia Backend Process via Theia RPC. See [Frontend Extensions](./frontend-extensions.md) for details.
 *   **Server Process (`apps/server-process/`):** A standalone Node.js process hosting the core logic and actual servers.
-    *   **Core Language Logic (`submodules/archiverse-archie`):** Provides the Langium services (grammar, parser, validator, linker, scope provider, AST interfaces).
-    *   **Persistence Implementations (`packages/persistence-*`):** Provides `persistence-graphdb` and `persistence-inmemory` implementations, consuming interfaces from `archiverse-archie`. The `server-process` selects one at startup.
-    *   **GLSP Server (`glsp-server` within `server-process`):** The actual GLSP server implementation. Accesses core language services directly within the same process. Listens for connections from the `glsp-contribution` in the Theia Backend.
-    *   **Model Service Facade (`model-service` within `server-process`):** Exposes core language and persistence functionalities (e.g., get/update AST, query) via a custom RPC interface (e.g., `ArchimateModelService`). Listens for connections from components like the `glsp-contribution` or potential Model Hub contributions in the Theia Backend.
+    *   **Core Language Logic:** Implements the Langium services (parser, validator, linker, scope provider, AST interfaces) using the grammar/schema provided by the `@archiverse/archie` NPM package. The `submodules/archiverse-archie` contains the source for this package (reference only).
+    *   **Persistence Implementations (`packages/persistence-*`):** Provides `persistence-graphdb` and `persistence-inmemory` implementations, consuming interfaces defined alongside the Langium services within the `server-process`. The `server-process` selects one at startup.
+    *   **GLSP Server (`glsp-server` within `server-process`):** The actual GLSP server implementation. Accesses the core Langium services (running within the same `server-process`) directly. Listens for connections from the `glsp-contribution` in the Theia Backend.
+    *   **Model Service Facade (`model-service` within `server-process`):** Exposes core language and persistence functionalities (e.g., get/update AST, query) via a custom RPC interface (e.g., `ArchiverseModelService`). Listens for connections from components like the `glsp-contribution` or potential Model Hub contributions in the Theia Backend.
 *   **Protocol (`packages/protocol`):** Shared TypeScript types and interfaces for communication (e.g., RPC definitions between Theia Backend Contributions and the Server Process).
 *   **Submodules:**
-    *   `archiverse-archie`: Core language definition.
+    *   `archiverse-archie`: Source for the core language grammar/schema package (reference only).
     *   `archiverse-infra`: Dockerfiles, Helm charts for deployment.
-    *   Others (GLSP, etc.).
+    *   Others (GLSP, etc. - reference only).
 
 ## Key Architectural Concepts
 
@@ -32,10 +32,10 @@ Following the CrossModel pattern, the application separates the standard Theia e
 
 *   **Theia Backend Contributions (`packages/theia-backend-extensions/`):** Act as lightweight proxies within the main Theia backend process. They handle communication with the frontend via Theia RPC and forward requests to the `Server Process` via custom RPC (e.g., Sockets).
 *   **`Server Process` (`apps/server-process/`):** The heavyweight process containing:
-    *   Langium services from `archiverse-archie`.
+    *   The implementation of the Langium services (using grammar from `@archiverse/archie`).
     *   The selected persistence implementation (`persistence-graphdb` or `persistence-inmemory`).
     *   The actual GLSP Server logic.
-    *   The `ArchimateModelService` RPC facade.
+    *   The `ArchiverseModelService` RPC facade.
     Components within this process can interact directly.
 
 ### Client/Backend Contributions/Server Process Separation
@@ -46,24 +46,24 @@ Following the CrossModel pattern, the application separates the standard Theia e
 
 ### Pluggable Persistence Layer
 
-The core language logic (in `submodules/archiverse-archie`) is decoupled from the storage mechanism.
-*   **Persistence Interface:** Defined within `archiverse-archie` (or implicitly expected by its services).
+The core language logic (implemented in `apps/server-process`) is decoupled from the storage mechanism.
+*   **Persistence Interface:** Defined within `apps/server-process` (or implicitly expected by its Langium services).
 *   **Implementations:** Provided by `packages/persistence-graphdb` and `packages/persistence-inmemory` in this repository.
 *   **`Server Process`:** Injects the chosen persistence implementation (based on configuration/environment) which handles:
     *   Managing the connection to the storage (graph DB or in-memory map).
     *   Handling optional seeding.
     *   Loading data and constructing Langium ASTs (`loadAstForUri`).
     *   Traversing Langium ASTs and persisting changes back (`saveAst`).
-*   **Langium Integration:** Standard Langium services from `archiverse-archie` operate on the in-memory AST loaded/managed via the injected persistence service *within the Server Process*.
+*   **Langium Integration:** The Langium services implemented within the `server-process` operate on the in-memory AST loaded/managed via the injected persistence service *within the Server Process*.
 
 ### Model Interaction via RPC
 
-Components outside the `Server Process` interact with the model data via the RPC interface exposed by the `ArchimateModelService` facade running within the `Server Process`.
+Components outside the `Server Process` interact with the model data via the RPC interface exposed by the `ArchiverseModelService` facade running within the `Server Process`.
 
-*   **`ArchimateModelService` Facade:** Exposed by `apps/server-process`, providing methods to get/update the AST, run validations, perform structural queries etc., using services from `archiverse-archie` and the injected persistence layer.
-*   **Theia Backend Contributions (e.g., GLSP Contribution, Model Hub Contributions):** Act as RPC clients connecting to the `ArchimateModelService`. If Model Hub is used, its contributions run here and make RPC calls to the `ArchimateModelService` instead of accessing Langium services directly.
+*   **`ArchiverseModelService` Facade:** Exposed by `apps/server-process`, providing methods to get/update the AST, run validations, perform structural queries etc., using the Langium services implemented within the `server-process` and the injected persistence layer.
+*   **Theia Backend Contributions (e.g., GLSP Contribution, Model Hub Contributions):** Act as RPC clients connecting to the `ArchiverseModelService`. If Model Hub is used, its contributions run here and make RPC calls to the `ArchiverseModelService` instead of accessing Langium services directly.
 *   **Frontend Clients (`packages/theia-frontend-*`, Editors):** Use standard Theia RPC to talk to the Backend Contributions, which then relay requests to the `Server Process` via the custom RPC mechanism.
 
 ### Custom Model Explorer (`packages/theia-frontend-explorer`)
 
-A dedicated custom Theia view replaces the standard File Explorer. It communicates via Theia RPC with a backend contribution (potentially part of `packages/theia-backend-extensions/`), which in turn uses RPC to call structural query methods on the `ArchimateModelService` facade in the `Server Process`.
+A dedicated custom Theia view replaces the standard File Explorer. It communicates via Theia RPC with a backend contribution (potentially part of `packages/theia-backend-extensions/`), which in turn uses RPC to call structural query methods on the `ArchiverseModelService` facade in the `Server Process`.

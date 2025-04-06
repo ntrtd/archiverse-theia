@@ -8,7 +8,7 @@ The standard deployment model for Theia-based applications, including the CrossM
 
 *   **Components per Session:**
     *   **Theia Backend Instance:** One instance of the main Theia backend Node.js process (hosting contributions from `packages/theia-backend-extensions/`) runs per user session. It manages the user's workbench state, UI connections, and acts as a proxy.
-    *   **Server Process Instance:** One instance of the `apps/server-process` Node.js process runs per user session. It hosts the core language services (`submodules/archiverse-archie`), the active persistence layer (`packages/persistence-*`), the GLSP server, and the `ArchimateModelService` facade. It manages the stateful Langium workspace (ASTs, index, scope cache) for that user's view of the model.
+    *   **Server Process Instance:** One instance of the `apps/server-process` Node.js process runs per user session. It implements the core Langium services (using grammar from `@archiverse/archie`), hosts the active persistence layer (`packages/persistence-*`), the GLSP server, and the `ArchiverseModelService` facade. It manages the stateful Langium workspace (ASTs, index, scope cache) for that user's view of the model.
 
 *   **Shared Component:**
     *   **Graph Database:** The underlying graph database is the central, shared component accessed concurrently by multiple `Server Process` instances (each serving a different user).

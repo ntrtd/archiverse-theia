@@ -22,15 +22,15 @@ Instead of creating dedicated `archiverse-llm-client` and `archiverse-llm-server
 *   **`@theia/ai-mcp`:** This remains crucial for enabling the LLM to interact with our graph model.
     *   The core Theia AI backend (using `@theia/ai-mcp`, running within the main Theia Backend process) connects to configured MCP servers.
     *   We will implement a **custom, standalone MCP Server process**. This server exposes tools that allow the LLM to query and manipulate the Archiverse model.
-    *   The MCP server tools **do not** interact directly with the graph database or the core language services. Instead, they make calls (e.g., HTTP, RPC) to the **`ArchimateModelService` facade** running in the separate `apps/server-process`.
-        *   *Communication Path:* The MCP server could call the `ArchimateModelService` RPC endpoint directly if exposed, or it might call a dedicated API endpoint provided by a contribution in `packages/theia-backend-extensions/` which then relays the call via RPC to the `ArchimateModelService`. The latter approach might be better for centralizing access control and logic related to external callers like the MCP server.
+    *   The MCP server tools **do not** interact directly with the graph database or the core Langium services. Instead, they make calls (e.g., HTTP, RPC) to the **`ArchiverseModelService` facade** running in the separate `apps/server-process`.
+        *   *Communication Path:* The MCP server could call the `ArchiverseModelService` RPC endpoint directly if exposed, or it might call a dedicated API endpoint provided by a contribution in `packages/theia-backend-extensions/` which then relays the call via RPC to the `ArchiverseModelService`. The latter approach might be better for centralizing access control and logic related to external callers like the MCP server.
     *   Example MCP Tools:
-        *   `archiverse_get_node_properties(node_uri: string)`: Fetches properties for a given node URI. (MCP tool calls `ArchimateModelService` facade, potentially via a backend contribution).
-        *   `archiverse_find_related_nodes(node_uri: string, relationship_type: string, target_node_type: string)`: Finds related nodes. (MCP tool calls `ArchimateModelService` facade).
-        *   `archiverse_create_node(node_type: string, properties: object)`: Creates a new node. (MCP tool calls `ArchimateModelService` facade).
-        *   `archiverse_create_relationship(from_uri: string, to_uri: string, relationship_type: string)`: Creates a relationship. (MCP tool calls `ArchimateModelService` facade).
-    *   The `ArchimateModelService` facade (in `apps/server-process`) receives these calls and uses its internal, injected persistence service (`persistence-graphdb` or `persistence-inmemory`) to interact with the actual data source.
-    *   The LLM uses these tools via the MCP framework, effectively interacting with the graph through multiple layers (LLM -> Theia AI -> MCP Server -> [Optional Theia Backend Contribution] -> RPC -> `ArchimateModelService` in `server-process` -> Persistence Layer -> Graph DB).
+        *   `archiverse_get_node_properties(node_uri: string)`: Fetches properties for a given node URI. (MCP tool calls `ArchiverseModelService` facade, potentially via a backend contribution).
+        *   `archiverse_find_related_nodes(node_uri: string, relationship_type: string, target_node_type: string)`: Finds related nodes. (MCP tool calls `ArchiverseModelService` facade).
+        *   `archiverse_create_node(node_type: string, properties: object)`: Creates a new node. (MCP tool calls `ArchiverseModelService` facade).
+        *   `archiverse_create_relationship(from_uri: string, to_uri: string, relationship_type: string)`: Creates a relationship. (MCP tool calls `ArchiverseModelService` facade).
+    *   The `ArchiverseModelService` facade (in `apps/server-process`) receives these calls and uses its internal, injected persistence service (`persistence-graphdb` or `persistence-inmemory`) to interact with the actual data source.
+    *   The LLM uses these tools via the MCP framework, effectively interacting with the graph through multiple layers (LLM -> Theia AI -> MCP Server -> [Optional Theia Backend Contribution] -> RPC -> `ArchiverseModelService` in `server-process` -> Persistence Layer -> Graph DB).
 *   **`@theia/ai-terminal`:** Could be used to provide LLM assistance for any custom command-line tools developed for managing the Archiverse models or graph database, but is less central to the core modeling interaction.
 
 ## Example Workflow (Creating an Element via LLM)
@@ -42,11 +42,11 @@ Instead of creating dedicated `archiverse-llm-client` and `archiverse-llm-server
 5.  The backend instructs the configured LLM to use the `archiverse_create_node` tool (made available via `@theia/ai-mcp` by connecting to the custom MCP server).
 6.  LLM invokes `archiverse_create_node(node_type='Application', properties={'name': 'Reporting Service'})`.
 7.  The core Theia AI backend, via `@theia/ai-mcp`, sends the tool invocation request to the custom MCP server process.
-8.  The custom MCP server receives the request for the `archiverse_create_node` tool. Its implementation makes a call (e.g., HTTP or RPC) to the **`ArchimateModelService` facade** in the `apps/server-process` (potentially routed via a dedicated API endpoint in `packages/theia-backend-extensions/`).
-9.  The `ArchimateModelService` receives the request and uses its injected persistence service to create the new 'Application' node with the name 'Reporting Service' in the graph database.
-10. Success is reported back from the `ArchimateModelService` via RPC to the caller (MCP server or backend contribution), which reports success to the MCP server, which reports success back to the core Theia AI backend/LLM.
+8.  The custom MCP server receives the request for the `archiverse_create_node` tool. Its implementation makes a call (e.g., HTTP or RPC) to the **`ArchiverseModelService` facade** in the `apps/server-process` (potentially routed via a dedicated API endpoint in `packages/theia-backend-extensions/`).
+9.  The `ArchiverseModelService` receives the request and uses its injected persistence service to create the new 'Application' node with the name 'Reporting Service' in the graph database.
+10. Success is reported back from the `ArchiverseModelService` via RPC to the caller (MCP server or backend contribution), which reports success to the MCP server, which reports success back to the core Theia AI backend/LLM.
 11. The core Theia AI backend sends a confirmation message ("Okay, I've created the 'Reporting Service' application.") back to the chat UI.
-12. **(Crucial Syncing Step):** The `apps/server-process` (specifically the `ArchimateModelService` or persistence layer upon successful write) should notify relevant listeners of the change. If Model Hub is used, this notification might go via RPC back to a Model Hub contribution in `packages/theia-backend-extensions/`, which then uses the Model Hub framework to emit model change events within Theia. Other components listening to these events (like `theia-frontend-explorer` or the GLSP server via its contribution) would refresh automatically.
+12. **(Crucial Syncing Step):** The `apps/server-process` (specifically the `ArchiverseModelService` or persistence layer upon successful write) should notify relevant listeners of the change. If Model Hub is used, this notification might go via RPC back to a Model Hub contribution in `packages/theia-backend-extensions/`, which then uses the Model Hub framework to emit model change events within Theia. Other components listening to these events (like `theia-frontend-explorer` or the GLSP server via its contribution) would refresh automatically.
 
 ## Example Workflow (Querying the Model)
 
@@ -55,10 +55,10 @@ Instead of creating dedicated `archiverse-llm-client` and `archiverse-llm-server
 3.  The backend identifies the intent and instructs the LLM to use a relevant tool, e.g., `archiverse_find_related_nodes`.
 4.  The LLM invokes `archiverse_find_related_nodes(node_uri='graphdb://System/AuthService', relationship_type='CONNECTS_TO', target_node_type='Application')`.
 5.  `@theia/ai-mcp` routes the request to the custom MCP server.
-6.  The MCP server tool implementation calls the relevant query method on the **`ArchimateModelService` facade** in the `apps/server-process` (potentially via a backend contribution).
-7.  The `ArchimateModelService` uses its injected persistence service to execute the corresponding graph query.
-8.  Results are returned from the persistence service to the `ArchimateModelService`.
-9.  The `ArchimateModelService` returns the results via RPC to the caller (MCP server or backend contribution), which passes them to the MCP server tool, then back to the core Theia AI backend/LLM, potentially formatted by the LLM.
+6.  The MCP server tool implementation calls the relevant query method on the **`ArchiverseModelService` facade** in the `apps/server-process` (potentially via a backend contribution).
+7.  The `ArchiverseModelService` uses its injected persistence service to execute the corresponding graph query.
+8.  Results are returned from the persistence service to the `ArchiverseModelService`.
+9.  The `ArchiverseModelService` returns the results via RPC to the caller (MCP server or backend contribution), which passes them to the MCP server tool, then back to the core Theia AI backend/LLM, potentially formatted by the LLM.
 10. The core Theia AI backend sends the formatted answer back to the chat UI.
 11. Client displays the list of applications in the chat panel.
 

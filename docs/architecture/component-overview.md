@@ -1,0 +1,20 @@
+# Archiverse Theia: Component Overview by Host
+
+This table provides a high-level overview of the key architectural components in Archiverse Theia, grouped by the process that hosts them, including comparisons to related concepts.
+
+| Host Process                 | Component                     | Package / Location                      | Description                                                                                                | Naming in CrossModel                                  | Naming in Eclipse Ecosystem                                     |
+| :--------------------------- | :---------------------------- | :-------------------------------------- | :--------------------------------------------------------------------------------------------------------- | :---------------------------------------------------- | :-------------------------------------------------------------- |
+| **Archiverse ontology host** (`services/model-server`) | Archiverse ontology (Logic)   | `@ntrtd/archiverse-archie` (external) | Defines the ArchiMate language structure, rules, validation logic (using Langium). Integrated into the host. | Grammar / Langium Services                            | Langium Grammar / Metamodel / Language Services                 |
+|                              | Persistence Layer             | `packages/persistence-*`                | Handles reading/writing model data from/to the configured data store (GraphDB or in-memory). Used by the host. | Persistence Implementation                            | Persistence Service / Repository / DAO                          |
+|                              | Archiverse ontology API       | `services/model-server` (internal)    | Internal API providing unified, non-LSP access to ontology logic & persistence. Exposed via RPC by the host. | Model Service Facade                                  | Custom Service Interface / RPC API                              |
+|                              | GLSP Endpoint/Service         | `services/model-server` (internal)    | Handles GLSP protocol requests for graphical diagrams. Exposed via RPC/WebSocket by the host.            | GLSP Server                                           | GLSP Server                                                     |
+| **Theia Application** (`hosts/*`) | Theia Backend Contributions   | `packages/theia-backend-extensions`     | Integration logic running within the Theia backend, acting as proxies/clients to the ontology host API.    | Backend Contributions / Proxies                       | Theia Backend Contribution / OSGi Service (less direct analogy) |
+|                              | Theia Frontend Extensions     | `packages/theia-frontend-*`           | UI components (views, editors, widgets) running within the Theia frontend (browser).                       | Frontend Extensions / Widgets                         | Theia Frontend Contribution / Eclipse View/Editor Part          |
+|                              | Theia Model Hub (Optional)    | (Theia Framework)                       | Optional framework for managing model access within the Theia backend process.                             | Model Hub                                             | Model Hub / EMF (less direct analogy)                           |
+| **(External)**               | Graph Database (if used)      | N/A                                     | External database system (e.g., TinkerPop-compatible) storing model data.                                | N/A                                                   | Database / Persistence Store                                    |
+
+**Notes:**
+
+*   The **Archiverse ontology host** runs as a standalone Node.js process, typically packaged from `services/model-server`.
+*   The **Theia Application** runs as its own process (Electron or Browser-based), packaged from `hosts/*`.
+*   Communication between the **Theia Application** (specifically its backend contributions) and the **Archiverse ontology host** typically occurs via RPC.

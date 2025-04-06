@@ -1,0 +1,35 @@
+{
+  "name": "@archiverse-theia/ontology-host",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone process hosting Archiverse ontology logic, persistence, GLSP endpoint, and ontology API.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./lib/main.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "watch": "tsc --build tsconfig.json --watch",
+    "start": "node ./lib/main.js",
+    "start:dev": "node --inspect=6010 ./lib/main.js",
+    "clean": "rimraf lib tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ntrtd/archiverse-archie": "latest", 
+    "langium": "~3.0.0", 
+    "reflect-metadata": "^0.2.1",
+    "vscode-languageserver": "~9.0.1",
+    "vscode-languageserver-textdocument": "~1.0.8",
+    "vscode-uri": "~3.0.8"
+    
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.1", 
+    "rimraf": "^5.0.5",
+    "typescript": "~5.3.3" 
+  }
+}
