@@ -1,6 +1,3 @@
-[submodule "submodules/archiverse-archie"]
-	path = submodules/archiverse-archie
-	url = https://github.com/ntrtd/archiverse-archie
 [submodule "submodules/langium"]
 	path = submodules/langium
 	url = https://github.com/eclipse-langium/langium
@@ -37,3 +34,6 @@
 [submodule "submodules/archiverse-infra"]
 	path = submodules/archiverse-infra
 	url = https://github.com/ntrtd/archiverse-infra
+[submodule "submodules/archiverse-ontology"]
+	path = submodules/archiverse-ontology
+	url = https://github.com/ntrtd/archiverse-ontology
