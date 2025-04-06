@@ -1,1 +1,0 @@
-{"version":3,"file":"validator.d.ts","sourceRoot":"","sources":["../../../src/cli/archiverse-annotation/validator.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,UAAU,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AACzD,OAAO,EAAE,gBAAgB,EAAmB,MAAM,YAAY,CAAC;AAmI/D;;;;;GAKG;AACH,wBAAgB,0BAA0B,CAAC,WAAW,EAAE,gBAAgB,EAAE,EAAE,IAAI,EAAE,UAAU,CAAC,YAAY,EAAE,MAAM,EAAE,kBAAkB,GAAG,IAAI,CAsF3I"}
