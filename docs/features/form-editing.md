@@ -4,40 +4,48 @@ This feature allows users to view and edit the properties of Archiverse model el
 
 ## Concept
 
-Provide a user-friendly way to manage the attributes of model elements. When a user selects a node (represented as a virtual file via the VFS), a dedicated form view can be opened, displaying its properties with appropriate input controls based on their data types (string, number, boolean, date, enumerations, potentially relationships).
+Provide a user-friendly way to manage the attributes of model elements. When a user selects an element in the custom `theia-frontend-explorer` view or another context, a dedicated form view (`theia-frontend-forms`) can be opened using the element's `graphdb://` URI. This form displays properties with appropriate input controls based on their data types. Data loading and saving likely occurs via Theia's Model Hub framework, communicating through backend contributions to the `ArchimateModelService` facade in the `apps/server-process`.
 
 ## Architecture Components
 
-*   **`archiverse-forms-client` (Frontend Extension):**
-    *   Responsible for rendering the form UI.
-    *   Registers itself as an editor or view for specific model element types or virtual files.
-    *   When opened for a specific element (e.g., `graphdb://User/user123`), it requests the element's data from a backend service.
-    *   Dynamically generates UI controls (text fields, checkboxes, dropdowns, date pickers, etc.) based on the properties defined in the Archiverse schema for that element type.
-    *   Populates the controls with the current property values received from the backend.
-    *   Handles user input and updates the internal state of the form.
-    *   When the user saves, it sends the complete set of updated property data back to the backend service for persistence.
-*   **Backend Service (Potentially within `archiverse-model-server` or a dedicated service):**
-    *   Provides an endpoint for the `archiverse-forms-client` to fetch element data. This service interacts with the "Model Service Facade" or VFS to get data from the graph database.
-    *   Provides an endpoint to receive updated data from the client. This service interacts with the Facade/VFS to update the corresponding node properties in the graph database.
+*   **`theia-frontend-forms` (Frontend Package):**
+    *   Responsible for rendering the form UI (e.g., using React, potentially with a library like React Hook Form or Formik).
+    *   Registers itself as an editor or view handler for `graphdb://` URIs representing elements suitable for form editing.
+    *   When activated for a specific URI (e.g., `graphdb://User/user123`), it uses the **Model Hub client API** (`@theia/modelhub-core/lib/browser`) to request the full model data (`ArchimateModelRoot`) for that URI.
+    *   Dynamically generates UI controls (text fields, checkboxes, dropdowns, relationship pickers from `theia-frontend-widgets`) based on the properties within the received `ArchimateModelRoot` and the element's schema/type (defined in `submodules/archiverse-archie`).
+    *   Populates the controls with the current property values from the model data.
+    *   Handles user input and updates the internal state of the form, potentially performing client-side validation.
+    *   When the user saves, it constructs the updated `ArchimateModelRoot` and uses the **Model Hub client API** to send it back to the backend contribution for persistence.
+*   **Model Hub Contributions (within `packages/theia-backend-extensions/`):**
+    *   Hosts the **`ArchimatePersistenceContribution`**.
+    *   When the Model Hub framework (running in the Theia backend) receives a `loadModel` request for a `graphdb://` URI from the forms client, it routes the request to the `loadModel` method of the `ArchimatePersistenceContribution`. This contribution makes an RPC call to the `ArchimateModelService` facade in the `apps/server-process` to fetch the data via the persistence layer.
+    *   When the Model Hub receives the updated `ArchimateModelRoot` via a `saveModel` call from the forms client, it routes it to the `saveModel` method of the `ArchimatePersistenceContribution`. This contribution makes an RPC call to the `ArchimateModelService` facade in the `apps/server-process` to update the data via the persistence layer.
+*   **`ArchimateModelService` Facade (within `apps/server-process/`):**
+    *   Receives RPC calls from the `ArchimatePersistenceContribution`.
+    *   Uses the injected persistence layer (`persistence-graphdb` or `persistence-inmemory`) to load or save the model data from/to the data source.
 
 ## Data Flow (Opening a Form)
 
-1.  User selects a virtual file/node (e.g., `graphdb://User/user123`) and chooses to open it with the Form Editor.
-2.  Theia routes this to the `archiverse-forms-client`.
-3.  Client requests data for `graphdb://User/user123` from the backend model service.
-4.  Backend service requests semantic data for "user123" from the Model Service Facade/VFS.
-5.  VFS queries the graph database for the node's properties.
-6.  Data is returned through the Facade to the backend service.
-7.  Backend service sends the property data (e.g., as JSON) to the Client.
-8.  Client uses the data and the Archiverse schema definition for "User" to render the appropriate form controls with current values.
+1.  User selects an element (e.g., `graphdb://User/user123`) in `theia-frontend-explorer` and triggers an action to open the form editor.
+2.  Theia activates the `theia-frontend-forms` editor/view for the URI.
+3.  The `theia-frontend-forms` client uses the Model Hub client API to request the model for `graphdb://User/user123`.
+4.  The Model Hub framework (in Theia backend) routes this request to the `loadModel` method of the `ArchimatePersistenceContribution` (in `packages/theia-backend-extensions/`).
+5.  The `ArchimatePersistenceContribution` makes an RPC call to the `ArchimateModelService` facade in `apps/server-process`.
+6.  The `ArchimateModelService` uses its injected persistence layer to query the graph database/in-memory store for the data corresponding to `graphdb://User/user123`.
+7.  The persistence layer returns the raw data.
+8.  The `ArchimateModelService` transforms the raw data into the serializable `ArchimateModelRoot` format (defined in `archiverse-archie`).
+9.  The `ArchimateModelService` returns the `ArchimateModelRoot` via RPC to the `ArchimatePersistenceContribution`.
+10. The `ArchimatePersistenceContribution` returns the `ArchimateModelRoot` through the Model Hub framework to the `theia-frontend-forms` client.
+11. The forms client uses the received `ArchimateModelRoot` data and the element's schema definition to render the appropriate form controls with current values.
 
 ## Data Flow (Saving a Form)
 
 1.  User modifies properties in the form and clicks "Save".
-2.  Client gathers all current property values from the form controls.
-3.  Client sends the complete set of updated data to the backend model service endpoint for `graphdb://User/user123`.
-4.  Backend service requests an update operation via the Model Service Facade/VFS.
-5.  VFS translates this into graph database operations to update the properties of the "user123" node.
-6.  (Potentially) Backend service confirms success to the client and triggers model change events for other views (like diagrams) to update.
+2.  The `theia-frontend-forms` client gathers all current property values and constructs the updated `ArchimateModelRoot` object.
+3.  The forms client uses the Model Hub client API to save the updated `ArchimateModelRoot` for the URI `graphdb://User/user123`.
+4.  The Model Hub framework (in Theia backend) routes this request to the `saveModel` method of the `ArchimatePersistenceContribution` (in `packages/theia-backend-extensions/`).
+5.  The `ArchimatePersistenceContribution` makes an RPC call to the `ArchimateModelService` facade in `apps/server-process`, sending the updated `ArchimateModelRoot`.
+6.  The `ArchimateModelService` uses its injected persistence layer to translate the `ArchimateModelRoot` changes into graph update operations (e.g., updating node properties) and executes them.
+7.  (Potentially) The `server-process` confirms success via RPC. The Model Hub framework might trigger model change events (initiated by the backend contribution upon RPC success) for other subscribed clients (like diagrams or the explorer) to update.
 
-*(Further details needed: Specific UI library for forms, handling complex property types like lists or relationships, validation logic)*
+*(Further details needed: Specific UI library for forms, handling complex property types like lists or relationships, validation logic implementation)*

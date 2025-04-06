@@ -1,0 +1,17 @@
+{
+    "projectName": "Archimate",
+    "language": {
+        "id": "archimate",
+        "grammar": "src/grammar/archimate.langium",
+        "fileExtensions": [".archimate"],
+        "textMate": {
+            "out": "syntaxes/archimate.tmLanguage.json"
+        }
+    },
+    "generate": {
+        "module": true,
+        "ast": true,
+        "parser": true
+    },
+    "out": "src/generated"
+}

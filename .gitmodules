@@ -34,3 +34,6 @@
 [submodule "submodules/archiverse-theia-backendcomm"]
 	path = submodules/archiverse-theia-backendcomm
 	url = https://github.com/ntrtd/archiverse-theia-backendcomm.git
+[submodule "submodules/archiverse-infra"]
+	path = submodules/archiverse-infra
+	url = https://github.com/ntrtd/archiverse-infra

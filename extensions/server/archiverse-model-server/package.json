@@ -16,9 +16,11 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@theia/core": "1.60.0"
+    "@theia/core": "1.60.0",
+    "gremlin": "^3.7.2"
   },
   "devDependencies": {
+    "@types/gremlin": "^3.6.5",
     "rimraf": "latest",
     "typescript": "latest"
   }
