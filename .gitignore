@@ -1,4 +1,5 @@
 node_modules
+submodules/
 .browser_modules
 lib
 *.log
