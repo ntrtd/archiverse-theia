@@ -59,7 +59,14 @@ nav:
     - GLSP Diagramming: features/glsp-diagramming.md
     - LLM Integration: features/llm-integration.md
     - Form Editing: features/form-editing.md
+    - Multi-Grammar Handling: features/multi-grammar-handling.md
+  - AI:
+    - Introduction: ai/index.md
+    - Architecture: ai/architecture.md
+    - Archiverse Intelligence: ai/archiverse-intelligence.md
+    - User Experience: ai/user-experience.md
   - Scenarios:
     - Import, Review, Export: scenarios/import-review-export.md
+    - ERP upgrade: scenarios/hybrid-ea-ingestion.md
   - Development:
     - Setup: development/setup.md
