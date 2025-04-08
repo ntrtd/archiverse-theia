@@ -37,3 +37,21 @@
 [submodule "submodules/archiverse-ontology"]
 	path = submodules/archiverse-ontology
 	url = https://github.com/ntrtd/archiverse-ontology
+[submodule "submodules/archiverse"]
+	path = submodules/archiverse
+	url = https://github.com/ntrtd/archiverse
+[submodule "submodules/archiverse-model-server"]
+	path = submodules/archiverse-model-server
+	url = https://github.com/ntrtd/archiverse-model-server
+[submodule "submodules/archiverse-portal"]
+	path = submodules/archiverse-portal
+	url = https://github.com/ntrtd/archiverse-portal
+[submodule "submodules/archiverse-www"]
+	path = submodules/archiverse-www
+	url = https://github.com/ntrtd/archiverse-www
+[submodule "submodules/archiverse-workflow"]
+	path = submodules/archiverse-workflow
+	url = https://github.com/ntrtd/archiverse-workflow
+[submodule "submodules/archiverse-mcp-server"]
+	path = submodules/archiverse-mcp-server
+	url = https://github.com/ntrtd/archiverse-mcp-server
