@@ -1,18 +1,23 @@
 {
-  "name": "archiverse-theia-monorepo",
   "private": true,
-  "description": "Monorepo root for Archiverse Theia",
-  "workspaces": [
-    "packages/*",
-    "services/*",
-    "hosts/*"
-  ],
+  "engines": {
+    "yarn": ">=1.7.0 <2",
+    "node": ">=18"
+  },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
-    "build": "lerna run build --stream",
-    "clean": "lerna run clean --parallel"
+    "build:browser": "yarn --cwd hosts/browser-app bundle",
+    "build:electron": "yarn --cwd hosts/electron-app bundle",
+    "prepare": "lerna run prepare",
+    "postinstall": "theia check:theia-version",
+    "start:browser": "yarn --cwd hosts/browser-app start",
+    "start:electron": "yarn --cwd hosts/electron-app start",
+    "watch:browser": "lerna run --parallel watch --ignore hosts/electron-app",
+    "watch:electron": "lerna run --parallel watch --ignore hosts/browser-app"
   },
   "devDependencies": {
-    "lerna": "^8.2.1"
-  }
+    "lerna": "8.2.1"
+  },
+  "workspaces": [
+    "archiverse-theia", "hosts/browser-app", "hosts/electron-app"
+  ]
 }
