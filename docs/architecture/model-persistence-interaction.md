@@ -1,45 +1,59 @@
 # Architecture: Model Persistence and Interaction
 
-A core aspect of Archiverse Theia is its use of a graph database (or an in-memory equivalent) as the central repository for model data. Interaction with this data source is managed via the separate **Archiverse ontology host** process (`services/model-server`). This process integrates the logic derived from the **Archiverse ontology** (defined in `@ntrtd/archiverse-archie` and implemented via Langium), hosts a **Persistence Layer**, hosts the **GLSP Endpoint/Service**, and exposes the **Archiverse ontology API** for communication. Frontend and backend components interact with the **Archiverse ontology host** via RPC.
+A core aspect of the Archiverse system is how model data is stored and how the user interface components interact with that data. This architecture relies heavily on separating the core logic and persistence into an external service (`archiverse-model-server`), a pattern that contrasts with simpler implementations but shares conceptual similarities with the process separation found in the `crossmodel` reference implementation (`submodules/crossmodel`).
 
-## Concept
+Interaction with the central data repository (e.g., a graph database or in-memory store) is exclusively managed by the external **`archiverse-model-server`** process (developed in a separate repository, e.g., https://github.com/ntrtd/archiverse-model-server). This external process is the single source of truth for model data and domain logic. It integrates:
+*   The **Archiverse ontology** logic (using Langium based on the grammar from the external `@ntrtd/archiverse-ontology` package).
+*   The **Persistence Layer** implementations (handling GraphDB, in-memory, etc.).
+*   The **GLSP Server** logic for diagramming.
+*   The **Archiverse Model Service API**, exposing functionality via RPC.
 
-The application uses:
+Frontend and backend components developed within *this* `archiverse-theia` repository are clients to this external server, communicating primarily via RPC.
 
-*   **Centralized Archiverse ontology host (`services/model-server`):** This standalone Node.js process hosts and orchestrates key backend functions, designed to run as an independent service (e.g., a Kubernetes container):
-    *   The **Archiverse ontology** logic: Handles language intelligence (parsing, validation, AST management, document store), built using Langium and the `@ntrtd/archiverse-archie` package.
-    *   The **Persistence Layer**: Manages communication with the data source (GraphDB/in-memory).
-    *   The **GLSP Endpoint/Service**: Provides graphical diagramming capabilities.
-    *   The **Archiverse ontology API**: An internal API providing unified, non-LSP access to the ontology logic (document store) and the Persistence Layer for other components within the host (like the GLSP service) or external RPC callers.
-    The host exposes this combined functionality via RPC endpoints based on the Archiverse ontology API.
-*   **Theia Backend Contributions (`packages/theia-backend-extensions/`):** These components run in the main Theia backend process (within the **Theia Application** hosts). They act as RPC clients to the API exposed by the **Archiverse ontology host**. If **Theia Model Hub** is used, these contributions implement its interfaces (`ModelPersistenceContribution`, `ModelServiceContribution`) and translate Model Hub requests into RPC calls to the **Archiverse ontology host**.
-*   **URI Identification:** Model elements are identified by custom URIs (e.g., `graphdb://Application/PaymentGateway`). These URIs are used throughout the system, including in RPC calls and **Theia Model Hub** interactions, to reference specific model elements within the data source managed by the **Archiverse ontology host**.
-*   **Custom Explorer (`packages/theia-frontend-explorer`):** A dedicated frontend view within the **Theia Application**. It communicates via Theia RPC with a backend contribution (e.g., `ArchiverseQueryServiceContribution`), which in turn makes RPC calls to the **Archiverse ontology host** API to fetch structural data.
-*   **Editors (GLSP, Forms):** Frontend editors within the **Theia Application** (`packages/theia-frontend-glsp`, `packages/theia-frontend-forms`). They request model data for a specific `graphdb://` URI. This request goes through the Theia backend contributions (either directly or via **Theia Model Hub**), which then make RPC calls to the **Archiverse ontology host** API to load the data via the **Persistence Layer**. Saving works similarly in reverse.
+## Conceptual Overview and Comparison with `crossmodel`
 
-## Architecture Components Involved
+The system employs the following key components and interaction patterns:
 
-*   **`services/model-server` (Archiverse ontology host):**
-    *   Integrates the **Archiverse ontology** logic (using `@ntrtd/archiverse-archie`).
-    *   Hosts the active **Persistence Layer** (`persistence-graphdb` or `persistence-inmemory`).
-    *   Hosts the **GLSP Endpoint/Service**.
-    *   Exposes the **Archiverse ontology API** over RPC.
-*   **`packages/theia-backend-extensions/`:**
-    *   Run within the **Theia Application** backend.
-    *   Contains contributions like `glsp-contribution` and potentially **Theia Model Hub** contributions.
-    *   Act as RPC clients to the **Archiverse ontology host** API.
-*   **`packages/theia-frontend-explorer`:**
-    *   Runs within the **Theia Application** frontend.
-    *   Custom Theia view UI.
-    *   Communicates via Theia RPC with backend contributions to fetch data.
-    *   Triggers commands to open editors using `graphdb://` URIs.
-*   **`packages/theia-frontend-glsp` / `packages/theia-frontend-forms`:**
-    *   Run within the **Theia Application** frontend.
-    *   Frontend editors activated based on `graphdb://` URIs.
-    *   Communicate via Theia RPC/WebSockets with backend contributions to request/update model data, which in turn communicate with the **Archiverse ontology host**.
+*   **External `archiverse-model-server` Process:**
+    *   **Role:** Hosts all core domain logic: Langium services, persistence adapters, GLSP server, and the Model Service Facade API. It's the authoritative source for model state.
+    *   **`crossmodel` Comparison:** `crossmodel` also uses a separate server process (launched by `submodules/crossmodel/extensions/crossmodel-lang/src/extension.ts` and defined in `main.ts`) to host its Langium, GLSP, and Model Servers. The key difference is that `crossmodel`'s server process is bundled within its repository and managed by a VS Code extension, whereas `archiverse-model-server` is a fully independent external service/repository.
 
-## Benefits
+*   **Theia Backend Contributions (`packages/theia-backend-extensions/` - This Repo):**
+    *   **Role:** Run within the main Theia backend process (part of `hosts/*`). They serve as **proxies** or **adaptors** between the Theia frontend and the external `archiverse-model-server`. They receive Theia RPC calls from the frontend and translate them into custom RPC calls (using `packages/protocol`) to the external server's Model Service API. They also handle proxying for LSP and potentially GLSP communication.
+    *   **`crossmodel` Comparison:** This proxy pattern is directly comparable to how `crossmodel`'s backend contributions (e.g., in `submodules/crossmodel/packages/core/`) act as clients to its internal server process, forwarding requests received from the frontend via Theia RPC to the appropriate server (Langium, GLSP, Model Server) using different protocols (LSP, GLSP Protocol, Custom RPC).
 
-*   Clear separation of concerns between core ontology/persistence logic (**Archiverse ontology host** integrating **Archiverse ontology** logic and **Persistence Layer**), Theia backend integration (`theia-backend-extensions`), and UI presentation (`theia-frontend-*`).
-*   Allows the **Archiverse ontology host** to run independently (e.g., as a container), facilitating different deployment scenarios and scaling.
-*   Enables a custom, potentially richer browsing experience tailored to graph structures compared to a standard file tree, driven by queries to the **Archiverse ontology host**.
+*   **URI Identification:**
+    *   **Role:** Model elements are identified by custom URIs (e.g., `graphdb://Application/PaymentGateway`). These URIs act as stable identifiers across the system, used in frontend views, editor inputs, and RPC calls to specify the target element within the dataset managed by `archiverse-model-server`.
+    *   **`crossmodel` Comparison:** `crossmodel` uses standard file URIs (`file://...`) as its primary identifiers, as its model is more closely tied to the workspace file structure. Archiverse's use of custom URIs reflects its potential decoupling from a traditional file system, especially when using a graph database backend.
+
+*   **Frontend Components (`packages/theia-frontend-*` - This Repo):**
+    *   **Custom Explorer (`theia-frontend-explorer`):** Provides a domain-specific view of the model hierarchy or structure. It uses Theia RPC to communicate with a backend contribution, which then queries the external `archiverse-model-server` via the Model Service API to get the data needed for display.
+    *   **Editors (GLSP, Forms, Text):**
+        *   `theia-frontend-glsp`: The GLSP client, rendering diagrams based on GModels received from the external GLSP Server (via WebSockets, likely proxied). Sends user actions back to the GLSP server. Comparable to `submodules/crossmodel/packages/glsp-client`.
+        *   `theia-frontend-forms`: Provides form-based editing, likely using Theia RPC to communicate with a backend contribution that interacts with the external `archiverse-model-server` via the Model Service API. Comparable to `submodules/crossmodel/packages/form-client`.
+        *   Text Editors (Standard Theia/Monaco): Interact with the Langium services in the external `archiverse-model-server` via the Language Server Protocol (LSP), typically proxied through the Theia backend.
+    *   **`crossmodel` Comparison:** The pattern of specialized frontend clients communicating through the Theia backend to dedicated server components (GLSP, Model Server, Langium/LSP) is fundamentally similar in both architectures.
+
+*   **Model Service Facade (`ArchiverseModelService` API - Exposed by External Server):**
+    *   **Role:** Provides a unified, high-level API over the core functionalities (language services, persistence, etc.) within the `archiverse-model-server`. This simplifies interaction for clients like the Theia Backend Contributions.
+    *   **`crossmodel` Comparison:** `crossmodel` explicitly implements a `ModelServiceFacade` (`submodules/crossmodel/extensions/crossmodel-lang/src/model-server/model-service.ts`) for similar reasons – to provide a stable, non-LSP interface for accessing and manipulating the semantic model held by Langium, especially for the GLSP and Form servers/clients.
+
+## Communication Flow Example (Loading a Diagram)
+
+1.  User triggers an action to open a diagram associated with a specific model element URI (e.g., `graphdb://...`).
+2.  The Theia frontend (e.g., the Explorer) makes a request (e.g., via command or Theia RPC) to a Theia Backend Contribution (in `packages/theia-backend-extensions/`).
+3.  The Theia Backend Contribution initiates a WebSocket connection (or uses an existing one) to the GLSP Server endpoint within the external `archiverse-model-server`.
+4.  The Backend Contribution sends a request (GLSP protocol) to the GLSP Server to fetch the graphical model (GModel) corresponding to the URI.
+5.  The GLSP Server (in `archiverse-model-server`):
+    *   Likely interacts with the Langium services (also in `archiverse-model-server`) via the Model Service Facade or directly to get the relevant semantic model (AST) fragment from the document store or persistence layer.
+    *   Translates the semantic model fragment into a graphical representation (GModel).
+    *   Sends the GModel back to the requesting Theia Backend Contribution via the WebSocket.
+6.  The Theia Backend Contribution forwards the GModel (or relevant update actions) to the `theia-frontend-glsp` component in the frontend via the WebSocket connection.
+7.  `theia-frontend-glsp` receives the GModel and renders the diagram.
+
+## Benefits of This Architecture
+
+*   **Clear Separation of Concerns:** Strongly decouples UI (frontend extensions), IDE integration/proxy logic (backend contributions), and core domain/language/persistence logic (external server). This mirrors the separation principle applied in `crossmodel`, enhancing modularity.
+*   **Independent Scalability & Deployment:** The external `archiverse-model-server` can be developed, tested, deployed (e.g., as a microservice), and scaled independently of the Theia IDE application.
+*   **Reusability of Core Logic:** The `archiverse-model-server` can potentially serve other clients beyond Theia (e.g., web viewers, CLI tools, other IDEs) via its defined APIs (Model Service RPC, LSP, GLSP).
+*   **Technology Flexibility:** Allows choosing the most appropriate technologies for the core server (Node.js is common for Langium/GLSP) independently of the Theia environment.
