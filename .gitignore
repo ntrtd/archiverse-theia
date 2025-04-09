@@ -1,6 +1,9 @@
 node_modules
+submodules
 .browser_modules
 lib
 *.log
 *-app/*
 !*-app/package.json
+submodules/archiverse-theia-backendcomm
+submodules/archiverse-theia-backendcomm
